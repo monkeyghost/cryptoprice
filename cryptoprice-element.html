@@ -11,20 +11,36 @@
   <script>
     class CryptoPrice extends Polymer.Element {
       static get is() { return 'cryptoprice-element'; }
-      // deprecated code of tutorial
-      /* static get properties() {
+      static get properties() {
         return {
           currencies: {
             type: Array,
             value: [
               {
+                code: 'ETH',
+                name: 'Ethereum'
+              },
+              {
                 code: 'BTC',
                 name: 'Bitcoin'
+              },
+              {
+                code: 'BCH',
+                name: 'Bitcoin Cash'
+              },
+
+              {
+                code: 'LTC',
+                name: 'Litecoin'
+              },
+              {
+                code: "NFL",
+                name: "Neocoin"
               }
             ]
           }
         }
-      } */
+      }
 
       ready() {
         super.ready();
@@ -35,19 +51,19 @@
 
       _getCurrencyData() {
         var ajax = this.$.coinbase;  //jQuery - gets element with id="coinbase" in template
-        
-        // deprecated code of tutorial
-        /* var currencies = this.currencies;
-        currencies.forEach(element => {
-          ajax.url = 'https://www.coinbase.com/api/v2/prices/' + element.code + 'USD/spot';
-        }, this); */
-
         ajax.url = 'https://www.coinbase.com/api/v2/prices/USD/spot';
         ajax.generateRequest();
       }
 
       _handleResponse(response) {
-        console.log(response);
+        var values = response.detail.__data.response.data;
+        var currencies = this.currencies;
+        currencies.forEach(currency => {
+          var value = values.find(crypto => crypto.base === currency.code)
+          if (value !== undefined) {
+            console.log(value.base + ': ' + value.amount);
+          }
+        })
       }
     }
     window.customElements.define(CryptoPrice.is, CryptoPrice);
