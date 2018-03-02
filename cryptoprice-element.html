@@ -2,6 +2,10 @@
 <link rel="import" href="bower_components/iron-ajax/iron-ajax.html">
 <link rel="import" href="bower_components/paper-spinner/paper-spinner-lite.html">
 
+<!-- install chart.js as described in http://www.chartjs.org -->
+<script src="bower_components/chart.js/dist/Chart.js"></script>
+<!-- import chart.js (script import because it is a library) -->
+
 <dom-module id="cryptoprice-element">
 
   <template>
@@ -15,6 +19,10 @@
       <template is="dom-repeat" items=[[currencies]]>
         <p>[[index]]. [[item.code]] - [[item.name]] - $[[item.price]]</p>
       </template>
+    </div>
+    <!-- integrate as described, hidden for loading, style for the size -->
+    <div hidden$="[[loading]]" style="width:100%; max-width:700px; margin:0 auto">
+      <canvas height: "2" width="4" id="canvas"></canvas>
     </div>
   </template>
 
@@ -56,7 +64,8 @@
               type: Boolean,
               notify: true,  // type: Boolean, if true the property is available for two way binding
               value: false,
-            }
+            },
+            myChart: {}
           }
         }
       }
@@ -86,7 +95,9 @@
         if (data.length > 0) {
           this._computeCurrencyPrice(data);
         } else {
-          console.log(data);
+          // handle historic
+          var url = response.detail.url;
+          this._computeGraph(data, url);
         }
       }
 
@@ -95,6 +106,53 @@
           var index = this.currencies.map(function (currency) { return currency.code }).indexOf(crypto.base);
           if (index !== -1) {
             this.set(`currencies.${index}.price`, crypto.amount);
+          }
+        });
+      }
+
+      _computeGraph(data, url) {
+        // get the currency from the URL for the title of chart
+        var cryptoCurrency = url.substring(39, 42);
+        // create label an price to pass to the chart element
+        var label = [];
+        var price = [];
+        // retrieve dates and prices from object in response
+        data.prices.forEach(function (element) {
+          label.push(element.time);
+          price.push(element.price);
+        }, this); // THIS argument is passed to define which 'this' should reference to when executing a callback
+        this._generateChart(label, price, cryptoCurrency);
+      }
+
+      _generateChart(label, price, title) {
+        if (this.myChart !== undefined) {
+          this.myChart.destroy();
+        }
+        // styling etc from tutorial
+        var ctx = this.$.canvas.getContext("2d");
+        this.myChart = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: label,
+            datasets: [{
+              pointRadius: 0,
+              label: title,
+              backgroundColor: "rgba(111,124,186,0.1",
+              borderColor: "rgba(111,124,186,1",
+              borderWidth: 2,
+              data: price,
+            }]
+          },
+          options: {
+            animation: false,
+            tooltips: {
+              mode: 'index',
+              intersect: false
+            },
+            scales: {
+              xAxes: [{ gridLines: { display: false } }],
+              yAxes: [{ gridLines: { display: false } }]
+            }
           }
         });
       }
