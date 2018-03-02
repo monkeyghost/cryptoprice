@@ -6,6 +6,10 @@
   <template>
     <h2>Hello World!</h2>
     <iron-ajax id="coinbase" handle-as="json" on-response="_handleResponse"></iron-ajax>
+    <p>[[currencies.0.code]] - [[currencies.0.name]] - [[currencies.0.price]]</p>
+    <p>[[currencies.1.code]] - [[currencies.1.name]] - [[currencies.1.price]]</p>
+    <p>[[currencies.2.code]] - [[currencies.2.name]] - [[currencies.2.price]]</p>
+    <p>[[currencies.3.code]] - [[currencies.3.name]] - [[currencies.3.price]]</p>
   </template>
 
   <script>
@@ -18,24 +22,29 @@
             value: [
               {
                 code: 'ETH',
-                name: 'Ethereum'
+                name: 'Ethereum',
+                price: 0,
               },
               {
                 code: 'BTC',
-                name: 'Bitcoin'
+                name: 'Bitcoin',
+                price: 0,
               },
               {
                 code: 'BCH',
-                name: 'Bitcoin Cash'
+                name: 'Bitcoin Cash',
+                price: 0,
               },
 
               {
                 code: 'LTC',
-                name: 'Litecoin'
+                name: 'Litecoin',
+                price: 0,
               },
               {
                 code: "NFL",
-                name: "Neocoin"
+                name: "Neocoin",
+                price: 0,
               }
             ]
           }
@@ -56,14 +65,17 @@
       }
 
       _handleResponse(response) {
-        var values = response.detail.__data.response.data;
-        var currencies = this.currencies;
-        currencies.forEach(currency => {
-          var value = values.find(crypto => crypto.base === currency.code)
-          if (value !== undefined) {
-            console.log(value.base + ': ' + value.amount);
+        var data = response.detail.__data.response.data;
+        this._computeCurrencyPrice(data);
+      }
+
+      _computeCurrencyPrice(data){
+        data.forEach(crypto => {
+          var index = this.currencies.map(function (currency) {return currency.code}).indexOf(crypto.base);
+          if (index !== -1){
+            this.set(`currencies.${index}.price`, crypto.amount);
           }
-        })
+        });
       }
     }
     window.customElements.define(CryptoPrice.is, CryptoPrice);
