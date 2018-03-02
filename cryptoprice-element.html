@@ -6,9 +6,12 @@
 
   <template>
     <h2>Hello World!</h2>
-    <iron-ajax id="coinbase" handle-as="json" on-response="_handleResponse" loading="{{loading}}"></iron-ajax> <!-- loading is two way binded by using {{}} -->
-    <paper-spinner-lite active="[[loading]]"></paper-spinner-lite> <!-- active is one way binded by using [[]] -->
-    <div hidden$="[[loading]]"> <!-- hidden is attribute binded by using $=[[]] -->
+    <iron-ajax id="coinbase" handle-as="json" on-response="_handleResponse" loading="{{loading}}"></iron-ajax>
+    <!-- loading is two way binded by using {{}} -->
+    <paper-spinner-lite active="[[loading]]"></paper-spinner-lite>
+    <!-- active is one way binded by using [[]] -->
+    <div hidden$="[[loading]]">
+      <!-- hidden is attribute binded by using $=[[]] -->
       <template is="dom-repeat" items=[[currencies]]>
         <p>[[index]]. [[item.code]] - [[item.name]] - $[[item.price]]</p>
       </template>
@@ -38,7 +41,6 @@
                 name: 'Bitcoin Cash',
                 price: 0,
               },
-
               {
                 code: 'LTC',
                 name: 'Litecoin',
@@ -63,6 +65,7 @@
         super.ready();
         Polymer.RenderStatus.afterNextRender(this, function () { // https://www.polymer-project.org/2.0/docs/api/namespaces/Polymer.RenderStatus
           this._getCurrencyData();
+          this._getHistoricData(this.currencies[1].code);
         })
       }
 
@@ -72,9 +75,19 @@
         ajax.generateRequest();
       }
 
+      _getHistoricData(currency) {
+        var ajax = this.$.coinbase;
+        ajax.url = `https://www.coinbase.com/api/v2/prices/${currency}-USD/historic?period=month`
+        ajax.generateRequest();
+      }
+
       _handleResponse(response) {
-        var data = response.detail.__data.response.data;
-        this._computeCurrencyPrice(data);
+        var data = response.detail.response.data;
+        if (data.length > 0) {
+          this._computeCurrencyPrice(data);
+        } else {
+          console.log(data);
+        }
       }
 
       _computeCurrencyPrice(data) {
