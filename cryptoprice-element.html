@@ -1,14 +1,18 @@
 <link rel="import" href="bower_components/polymer/polymer-element.html">
 <link rel="import" href="bower_components/iron-ajax/iron-ajax.html">
+<link rel="import" href="bower_components/paper-spinner/paper-spinner-lite.html">
 
 <dom-module id="cryptoprice-element">
 
   <template>
     <h2>Hello World!</h2>
-    <iron-ajax id="coinbase" handle-as="json" on-response="_handleResponse"></iron-ajax>
-    <template is="dom-repeat" items=[[currencies]]>
-      <p>[[index]]. [[item.code]] - [[item.name]] - $[[item.price]]</p>
-    </template>
+    <iron-ajax id="coinbase" handle-as="json" on-response="_handleResponse" loading="{{loading}}"></iron-ajax> <!-- loading is two way binded by using {{}} -->
+    <paper-spinner-lite active="[[loading]]"></paper-spinner-lite> <!-- active is one way binded by using [[]] -->
+    <div hidden$="[[loading]]"> <!-- hidden is attribute binded by using $=[[]] -->
+      <template is="dom-repeat" items=[[currencies]]>
+        <p>[[index]]. [[item.code]] - [[item.name]] - $[[item.price]]</p>
+      </template>
+    </div>
   </template>
 
   <script>
@@ -45,7 +49,12 @@
                 name: "Neocoin",
                 price: 0,
               }
-            ]
+            ],
+            loading: {
+              type: Boolean,
+              notify: true,  // type: Boolean, if true the property is available for two way binding
+              value: false,
+            }
           }
         }
       }
@@ -68,10 +77,10 @@
         this._computeCurrencyPrice(data);
       }
 
-      _computeCurrencyPrice(data){
+      _computeCurrencyPrice(data) {
         data.forEach(crypto => {
-          var index = this.currencies.map(function (currency) {return currency.code}).indexOf(crypto.base);
-          if (index !== -1){
+          var index = this.currencies.map(function (currency) { return currency.code }).indexOf(crypto.base);
+          if (index !== -1) {
             this.set(`currencies.${index}.price`, crypto.amount);
           }
         });
